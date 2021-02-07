@@ -1,6 +1,11 @@
-// For performing some operations asynchronously
+
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
+
+import 'package:share/share.dart';
+
+import"package:path_provider/path_provider.dart";
 
 // For using PlatformException
 import 'package:flutter/services.dart';
@@ -9,9 +14,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
 
 // for Wifi info (android)
-import 'package:android_wifi_info/android_wifi_info.dart';
+
+import 'package:wifi_info_flutter/wifi_info_flutter.dart';
+
+
+import 'package:http/http.dart';
 
 void main() => runApp(MyApp());
+
+TextEditingController customControllerSsid = TextEditingController();
+TextEditingController customController = TextEditingController();
+
+TextEditingController customControllerCapture = TextEditingController();
+
+TextEditingController customControllerIp = TextEditingController();
 
 class MyApp extends StatelessWidget {
   @override
@@ -33,8 +49,118 @@ class BluetoothApp extends StatefulWidget {
 
 class _BluetoothAppState extends State<BluetoothApp> {
 
+
+  //Creat Alert Dialog
+  CreatAlertDialog(BuildContext context,String ssid)
+  {
+    return showDialog(context: context,builder: (context){
+      return AlertDialog(
+        backgroundColor: Colors.grey[900],
+        shape:new RoundedRectangleBorder(
+            side: new BorderSide(color: Colors.orange[400], width: 1.0),
+            borderRadius: BorderRadius.circular(15.0)) ,
+        title: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: <Widget>[
+
+            Text(
+              "ssid",
+              textDirection: TextDirection.rtl,
+              style: TextStyle(fontSize: 14,color: Colors.white70),
+            ),
+            Text(
+              "password",
+              textDirection: TextDirection.rtl,
+              style: TextStyle(fontSize: 14,color: Colors.white70),
+            ),
+
+
+          ],
+        ),
+
+        content: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: <Widget>[
+            Flexible(
+              child: TextField(
+
+                style: new TextStyle(color: Colors.white),
+                // keyboardType: TextInputType.number,
+                controller:customControllerSsid ,
+                decoration:new InputDecoration(
+                  hintText: "Ssid",
+                  hintStyle: TextStyle(fontSize: 15.0, color: Colors.white30),
+                ) ,
+              ),
+            ),
+            SizedBox(
+              width: 30,
+            ),
+            Flexible(
+              child: TextField(
+                style: new TextStyle(color: Colors.white),
+               // keyboardType: TextInputType.number,
+                controller:customController ,
+                decoration:new InputDecoration(
+                  hintText: "Password",
+                    hintStyle: TextStyle(fontSize: 15.0, color: Colors.white30),
+                ) ,
+              ),
+            ),
+
+          ],
+        ),
+        actions: <Widget>[
+          MaterialButton(
+
+            color: Colors.orange,
+            elevation: 5.0,
+            child: Text("send"
+              ,style: TextStyle(color: Colors.white70),),
+            onPressed: (){
+              Navigator.of(context).pop();
+              String password= customController.text.toString();
+              String ssid1 = customControllerSsid.text.toString();
+              ShareJson(ssid1,password,'1');
+
+
+
+
+              customController.clear();
+
+
+            },
+          )
+        ],
+      );
+    });
+  }
+
+
+
+
+
+
+
+  //end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   //Wifi Information
-  Future<String> ssid;
+
 
 
   // Initializing the Bluetooth connection state to be unknown
@@ -255,54 +381,7 @@ class _BluetoothAppState extends State<BluetoothApp> {
                   ],
                 ),
               ),
-              Stack(
-                children: <Widget>[
-                  Column(
-                    children: <Widget>[
-                      Padding(
-                        padding: const EdgeInsets.only(top: 10),
-                        child: Text(
-                          "PAIRED DEVICES",
-                          style: TextStyle(fontSize: 24, color: Colors.blue),
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: <Widget>[
-                            Text(
-                              'Device:',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            DropdownButton(
-                              items: _getDeviceItems(),
-                              onChanged: (value) =>
-                                  setState(() => _device = value),
-                              value: _devicesList.isNotEmpty ? _device : null,
-                            ),
-                            RaisedButton(
-                              onPressed: _isButtonUnavailable
-                                  ? null
-                                  : _connected ? _disconnect : _connect,
-                              child:
-                                  Text(_connected ? 'Disconnect' : 'Connect'),
-                            ),
-                          ],
-                        ),
-                      ),
 
-
-                    ],
-                  ),
-                  Container(
-                    color: Colors.blue,
-                  ),
-                ],
-              ),
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.all(20),
@@ -314,39 +393,55 @@ class _BluetoothAppState extends State<BluetoothApp> {
                           elevation: 2,
                           child: Text("Send Json"),
                           onPressed: () async {
-                            _sendJSONToBluetooth("SSid","pasword","1");
-                            print ("__________________");
-                            var test =await ssidGetter();
-                            print (  test + "SSSSSSS");
 
-                            print ("_______DD___________");
+                            var wifiName = await WifiInfo().getWifiName();
+                            print(wifiName);
+                            customControllerSsid = new TextEditingController(text: wifiName);
+                            CreatAlertDialog(context,wifiName);
+
+
+                          },
+                        ),
+                        Flexible(
+                          child: TextField(
+                            style: new TextStyle(color: Colors.black),
+                            keyboardType: TextInputType.number,
+                            controller:customControllerCapture ,
+                            decoration: InputDecoration(
+                                labelText: 'Enter a number'
+                            ),
+                          ),
+                        ),
+                        Flexible(
+                          child: TextField(
+                            style: new TextStyle(color: Colors.black),
+                            keyboardType: TextInputType.number,
+                            controller:customControllerIp,
+                            decoration: InputDecoration(
+                                labelText: 'Enter an ip'
+                            ),
+                          ),
+                        ),
+                        MaterialButton(
+
+                          color: Colors.orange,
+                          elevation: 5.0,
+                          child: Text("capture"
+                            ,style: TextStyle(color: Colors.white70),),
+                          onPressed: (){
+                            String capture=customControllerCapture.text.toString();
+                            String ip=customControllerIp.text.toString();
+                            PostCommand(capture,ip);
+                            print(capture + " " + ip);
+
                           },
                         ),
 
 
 
-                //        buildFutureListTile(
-                //          future: ssid ?? " dd",
-                //          name: 'ssid',
-                //          description: Column(
-                //            children: <Widget>[
-                //              TText(
-                //                  'Service set identifier (SSID aka WiFi Name) of the current 802.11 network.'),
-                //            ],
-                //          ),
-                //          type: 'String',
-                //        ),
 
 
 
-                        SizedBox(height: 15),
-                        RaisedButton(
-                          elevation: 2,
-                          child: Text("Bluetooth Settings"),
-                          onPressed: () {
-                            FlutterBluetoothSerial.instance.openSettings();
-                          },
-                        ),
                        ],
                     ),
                   ),
@@ -358,6 +453,25 @@ class _BluetoothAppState extends State<BluetoothApp> {
       ),
     );
   }
+
+
+
+  //
+  void PostCommand(String capture,String ip) async
+  {
+
+
+    // String url ="https://72.68.100.221/"+capture;
+    String url ="https://" + ip+  "/"+capture;
+    Response response =await get(url);
+    setState(() {
+
+    });
+
+
+
+  }
+
 
   // Dropdown Menu
   List<DropdownMenuItem<BluetoothDevice>> _getDeviceItems() {
@@ -476,7 +590,8 @@ class _BluetoothAppState extends State<BluetoothApp> {
 
     String rawJson = jsonEncode(map);
 
-    connection.output.add(utf8.encode(rawJson));
+  //  connection.output.add(utf8.encode(rawJson));
+    connection.output.add(utf8.encode("1"));
     await connection.output.allSent;
 
   }
@@ -496,6 +611,54 @@ class _BluetoothAppState extends State<BluetoothApp> {
         duration: duration,
       ),
     );
+  }
+
+
+  //Save Json File*****************************
+  Future<String> get _localPath async {
+    final directory = await getApplicationDocumentsDirectory();
+
+    return directory.path;
+  }
+
+  Future<File> get _localFile async {
+    final path = await _localPath;
+    return File('$path/wifi_info');
+  }
+  Future<File> writeJson(String counter) async {
+    final file = await _localFile;
+
+    // Write the file.
+    return file.writeAsString('$counter');
+  }
+  //end
+
+
+  // Share JSON
+  void ShareJson (String ssid,String password,String user_id) async
+  {
+
+    Map<String, dynamic> map = {
+      'ssid': ssid,
+      'password': password,
+      'user_id': user_id,
+    };
+
+    String wifi_info = "network={\n ssid=\"$ssid\" \n psk=\"$password\"\n}";
+    //end
+
+
+
+
+    String rawJson = jsonEncode(map);
+
+    writeJson(wifi_info);
+    print("___________________");
+
+    var temp =await _localPath;
+    print(temp);
+    // Share.share('{SSid:HusseinCopol,pasword:1234,user_id:1}');
+    Share.shareFiles(['$temp/wifi_info'], text: 'Great picture');
   }
 
 
@@ -527,12 +690,7 @@ class _BluetoothAppState extends State<BluetoothApp> {
   }
 
 
-  //ssid Fututre Func
-Future<String> ssidGetter()
-{
-  ssid = AndroidWifiInfo.ssid;
-  return ssid;
-}
+
 
 }
 
