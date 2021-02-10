@@ -311,7 +311,7 @@ class _BluetoothAppState extends State<BluetoothApp> {
     var temp = await _localPath;
     print(temp);
     // Share.share('{SSid:HusseinCopol,pasword:1234,user_id:1}');
-    Share.shareFiles(['$temp/wifi_info'], text: 'Great picture');
+    Share.shareFiles(['$temp/wifi_info'], text: 'Great  ');
   }
 
 
